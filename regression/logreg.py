@@ -77,6 +77,7 @@ class BaseRegressor():
         """
         loss_hist = self.loss_history_train
         loss_hist_val = self.loss_history_val
+        print(loss_hist)
         assert len(loss_hist) > 0, "Need to run training before plotting loss history"
         fig, axs = plt.subplots(2, figsize=(8,8))
         fig.suptitle('Loss History')
@@ -88,7 +89,7 @@ class BaseRegressor():
         axs[0].set_ylabel('Train Loss')
         axs[1].set_ylabel('Val Loss')
         fig.tight_layout()
-        
+        plt.show()
 
 # import required modules
 class LogisticRegression(BaseRegressor):
@@ -107,7 +108,11 @@ class LogisticRegression(BaseRegressor):
         Returns: 
             gradients for given loss function (np.ndarray)
         """
-        pass
+        y_pred = self.make_prediction(X)
+        n=len(y)
+        error = y - y_pred
+        grad = -X.T.dot(error)
+        return grad/n
     
     def loss_function(self, X, y) -> float:
         """
@@ -123,7 +128,22 @@ class LogisticRegression(BaseRegressor):
         Returns: 
             average loss 
         """
-        pass
+        #calculate predicted values
+        y_pred = self.make_prediction(X)
+
+        #bound the predictions b/c were gonna log them
+        y_pred=np.clip(y_pred, 0.00001, 0.99999)
+
+        n = len(y)
+
+        #calulate 1-y_i and 1-p(y_i)
+        not_y = np.ones(n)-y
+        prob_not_y = np.ones(n)-y_pred
+
+        #calculate log loss
+        log_loss = -np.mean((y*np.log(y_pred))+((not_y)*np.log(prob_not_y)))
+        return log_loss
+
     
     def make_prediction(self, X) -> np.array:
         """
@@ -137,8 +157,10 @@ class LogisticRegression(BaseRegressor):
         Returns: 
             y_pred for given X
         """
-
-        pass
+        #make the linear transformation
+        pred=np.dot(X,self.W).flatten()
+        #sigmoid the linear transform
+        return 1/(1+np.exp(-pred)) 
 
 
 
